@@ -5,3 +5,4 @@ python                                                                      \
 code/main.py                                                                 \
 --batch_size             4                                                  \
 --n_smaple 10 \
+--data_dir .data \
