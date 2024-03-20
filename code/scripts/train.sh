@@ -1,4 +1,4 @@
-cd ~/ENS-challenge-24
+cd ~/4D-convnet
 
 CUDA_VISIBLE_DEVICES=0                                                      \
 python                                                                      \
