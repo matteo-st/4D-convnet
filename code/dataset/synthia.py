@@ -23,24 +23,27 @@ import MinkowskiEngine as ME
 class SYNTHIA(Dataset):
     def __init__(self, cfg):
         self.cfg = cfg
+        self.imgs_dir = os.path.join(cfg.data_dir, "SYNTHIA-SEQS-01-SPRING/RGB/Stereo_Left/Omni_F")
+        self.labels_dir = os.path.join(cfg.data_dir, "SYNTHIA-SEQS-01-SPRING/GT/Stereo_Left/Omni_F")
         self.get_files(cfg)
         self.quantization_size = cfg['quantization_size']
 
     def get_files(self, cfg):
-        RGB_files_list = os.listdir(cfg["dirs"]["RGB"])
-        label_files_list = os.listdir(cfg["dirs"]["label"])
+
+        RGB_files_list = os.listdir(self.imgs_dir)
+        label_files_list = os.listdir(self.labels_dir)
         
-        if cfg["n_sample"] is not None:
-            RGB_files_list = RGB_files_list[:cfg["n_sample"]]
-            label_files_list = label_files_list[:cfg["n_sample"]]
+        if cfg.n_sample is not None:
+            RGB_files_list = RGB_files_list[:cfg.n_sample]
+            label_files_list = label_files_list[:cfg.n_sample]
         
         self.img_files = RGB_files_list
         self.label_files = label_files_list
     
     def __getitem__(self, index):
         # Load the RGB image and its corresponding label
-        rgb_img_path = os.path.join(self.cfg["dirs"]["RGB"], self.img_files[index])
-        label_img_path = os.path.join(self.cfg["dirs"]["label"], self.label_files[index])
+        rgb_img_path = os.path.join(self.imgs_dir, self.img_files[index])
+        label_img_path = os.path.join(self.labels_dir, self.label_files[index])
         
         rgb_img = cv2.imread(rgb_img_path)  # cv2 loads image in BGR
         rgb_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2RGB)  # Convert to RGB
