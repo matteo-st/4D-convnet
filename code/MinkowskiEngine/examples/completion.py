@@ -525,15 +525,14 @@ def train(net, dataloader, device, config):
     crit = nn.BCEWithLogitsLoss()
 
     net.train()
-    train_iter = iter(dataloader)
     # val_iter = iter(val_dataloader)
     logging.info(f"LR: {scheduler.get_lr()}")
-    for i in range(config.max_iter):
+    for i, data_dict in enumerate(dataloader):
 
         s = time()
-        data_dict = train_iter.next()
         d = time() - s
-
+        if i <4 :
+            print(data_dict)
         optimizer.zero_grad()
 
         in_feat = torch.ones((len(data_dict["coords"]), 1))
