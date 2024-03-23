@@ -251,7 +251,9 @@ class ModelNet40Dataset(torch.utils.data.Dataset):
         # Get coords
         xyz = xyz * self.resolution
         coords, inds = ME.utils.sparse_quantize(xyz, return_index=True)
-
+        print("get item coord", coords.shape)
+        print("get item xyz[inds]", xyz[inds].shape)
+        print("get item idx", idx.shape)
         return (coords, xyz[inds], idx)
 
 
