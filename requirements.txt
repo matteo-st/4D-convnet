@@ -1,0 +1,4 @@
+patool
+opencv-python
+plyfile
+open3d
