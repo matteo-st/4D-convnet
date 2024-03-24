@@ -5,7 +5,6 @@ import sys
 from tqdm import tqdm
 lib_path = os.path.expanduser('~/4D-convnet-conda-test/4D-convnet')
 sys.path.append(lib_path)
-print(sys.path)
 
 from lib.utils import mkdir_p
 from lib.pc_utils import save_point_cloud
@@ -31,6 +30,25 @@ STANFORD_3D_TO_SEGCLOUD_LABEL = {
     0: 12,
 }
 
+def investigate_file(file_path):
+    with open(file_path, 'r') as file:
+        line_lengths = []
+        for line_number, line in enumerate(file, start=1):
+            # Splitting line into components assuming they are space-separated
+            parts = line.strip().split()
+            line_lengths.append((line_number, len(parts)))
+            
+        # Find unique line lengths
+        unique_line_lengths = set(length for _, length in line_lengths)
+        
+        if len(unique_line_lengths) > 1:
+            print(f"File contains lines of varying lengths: {unique_line_lengths}")
+            for length in unique_line_lengths:
+                lines_with_length = [line_number for line_number, line_length in line_lengths if line_length == length]
+                print(f"Lines with length {length}: {lines_with_length[:5]}{'...' if len(lines_with_length) > 5 else ''}")
+        else:
+            print(f"All lines have the same length: {unique_line_lengths.pop()}")
+
 
 class Stanford3DDatasetConverter:
 
@@ -46,10 +64,11 @@ class Stanford3DDatasetConverter:
   def read_txt(cls, txtfile):
     # Read txt file and parse its content.
     with open(txtfile) as f:
-      print(txtfile)
       pointcloud = [l.split() for l in f]
+      
     # Load point cloud to named numpy array.
     pointcloud = np.array(pointcloud).astype(np.float32)
+
     assert pointcloud.shape[1] == 6
     xyz = pointcloud[:, :3].astype(np.float32)
     rgb = pointcloud[:, 3:].astype(np.uint8)
@@ -63,11 +82,7 @@ class Stanford3DDatasetConverter:
     """
 
     txtfiles = glob.glob(os.path.join(root_path, '*/*/*.txt'))
-    i=0
     for txtfile in tqdm(txtfiles):
-      i+=1
-      if i==2:
-        break
         
       file_sp = os.path.normpath(txtfile).split(os.path.sep)
       target_path = os.path.join(out_path, file_sp[-3])
@@ -79,13 +94,15 @@ class Stanford3DDatasetConverter:
 
       annotation, _ = os.path.split(txtfile)
       subclouds = glob.glob(os.path.join(annotation, 'Annotations/*.txt'))
-      print("subclouds", subclouds)
       coords, feats, labels = [], [], []
+
       for inst, subcloud in enumerate(subclouds):
         # Read ply file and parse its rgb values.
-        xyz, rgb = cls.read_txt(subcloud)
+        try :
+          xyz, rgb = cls.read_txt(subcloud)
+        except ValueError:
+          print("File {} has wrong format".format(subcloud))
         _, annotation_subfile = os.path.split(subcloud)
-        print("annotation_subfile", annotation_subfile.split('_')[0])
         clsidx = cls.CLASSES.index(annotation_subfile.split('_')[0])
 
         coords.append(xyz)
@@ -99,15 +116,16 @@ class Stanford3DDatasetConverter:
         coords = np.concatenate(coords, 0)
         feats = np.concatenate(feats, 0)
         labels = np.concatenate(labels, 0)
-        inds, collabels = ME.utils.sparse_quantize(
+        coords, feats, labels = ME.utils.sparse_quantize(
             coords,
             feats,
             labels,
-            return_index=True,
+            # return_index=True,
             ignore_label=255,
             quantization_size=0.01  # 1cm
         )
-        pointcloud = np.concatenate((coords[inds], feats[inds], collabels[:, None]), axis=1)
+        
+        pointcloud = np.concatenate((coords, feats, labels[:, None]), axis=1)
 
         # Write ply file.
         mkdir_p(target_path)
