@@ -1,4 +1,4 @@
-# Generalized Convolution
+# Generalized Sparse Convolution
 Exploring 3D understanding through Generalized Sparse Convolutions.
 
 <table align="center">
